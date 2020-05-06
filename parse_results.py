@@ -1,4 +1,3 @@
-import random
 import subprocess
 from datetime import datetime
 import seaborn as sns
@@ -70,7 +69,14 @@ for file_name in file_list:
                 val_time = float(value.split("=")[1].strip())
 
         results.append(
-            [file_name, int(epoch_index), hr_accuracy, train_time, val_time, ngpu]
+            [
+                file_name,
+                int(epoch_index),
+                float(hr_accuracy),
+                train_time,
+                val_time,
+                ngpu,
+            ]
         )
         elapsed_dict[file_name] = [delta, delta.seconds]
 
@@ -113,8 +119,63 @@ df = pd.DataFrame()
 # Add columns
 df["epochs"] = epochs_list
 df["train_time"] = train_time_list
+df["accuracy"] = hr_accuracy_list
+df["valid_time"] = val_time_list
 df["ngpu"] = ngpu_list
 df["keys"] = keys_list
+
+
+def create_lineplot(df, y: str, output: str, title: str, y_label: str):
+    sns.lineplot(
+        x="epochs", y=y, data=df, estimator=None, lw=1, sort=True, dashes=False
+    )
+
+    # Set title
+    plt.title(title)
+
+    # Set x-axis label
+    plt.xlabel("epochs")
+
+    # Set y-axis label
+    plt.ylabel(y_label)
+
+    plt.savefig(output)
+
+# TODO plot the training and validation times sum across runs.
+# for ngpu in set(ngpu_list):
+#     create_lineplot(
+#         df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).sum(),
+#         y="train_time",
+#         output="2_time_across_runs.png",
+#         title="Training time accross runs",
+#         y_label="time",
+#     )
+
+# for ngpu in set(ngpu_list):
+#     create_lineplot(
+#         df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).sum(),
+#         y="valid_time",
+#         output="2_valid_across_runs.png",
+#         title="Valid time accross runs",
+#         y_label="time"
+#     )
+
+# plt.clf()
+# plot progression of accuracy across epochs and across GPU configurations.
+# for ngpu in set(ngpu_list):
+#     create_lineplot(
+#         df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).mean(),
+#         y="accuracy",
+#         output="3_accuracy.png",
+#         title="Accuracy accross gpu configurations.",
+#         y_label="accuracy",
+#     )
+
+plt.clf()
+
+import sys
+
+sys.exit(0)
 
 sns.lineplot(
     x="epochs",  # Horizontal axis
@@ -124,9 +185,6 @@ sns.lineplot(
     estimator=None,
     lw=1,
     sort=True,
-    # style="x",
-    #    style="ngpu",
-    #    kind="line",
     dashes=False,
 )
 
