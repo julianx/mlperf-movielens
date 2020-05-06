@@ -125,9 +125,9 @@ df["ngpu"] = ngpu_list
 df["keys"] = keys_list
 
 
-def create_lineplot(df, y: str, output: str, title: str, y_label: str):
+def create_lineplot(df, y: str, output: str, title: str, y_label: str, label: str):
     sns.lineplot(
-        x="epochs", y=y, data=df, estimator=None, lw=1, sort=True, dashes=False
+        x="epochs", y=y, data=df, estimator=None, lw=1, sort=True, dashes=False, label=label
     )
 
     # Set title
@@ -141,93 +141,58 @@ def create_lineplot(df, y: str, output: str, title: str, y_label: str):
 
     plt.savefig(output)
 
+# plot the training and validation times across epochs.
+for ngpu in set(ngpu_list):
+    create_lineplot(
+        df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).mean(),
+        y="train_time",
+        output="1_training_epochs.png",
+        title="Training time accross epochs",
+        y_label="time",
+        label=ngpu
+    )
+plt.clf()
+for ngpu in set(ngpu_list):
+    create_lineplot(
+        df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).mean(),
+        y="valid_time",
+        output="1_valid_epochs.png",
+        title="Valid time accross epochs",
+        y_label="time",
+        label=ngpu
+    )
+plt.clf()
 # TODO plot the training and validation times sum across runs.
-# for ngpu in set(ngpu_list):
-#     create_lineplot(
-#         df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).sum(),
-#         y="train_time",
-#         output="2_time_across_runs.png",
-#         title="Training time accross runs",
-#         y_label="time",
-#     )
-
-# for ngpu in set(ngpu_list):
-#     create_lineplot(
-#         df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).sum(),
-#         y="valid_time",
-#         output="2_valid_across_runs.png",
-#         title="Valid time accross runs",
-#         y_label="time"
-#     )
-
-# plt.clf()
-# plot progression of accuracy across epochs and across GPU configurations.
-# for ngpu in set(ngpu_list):
-#     create_lineplot(
-#         df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).mean(),
-#         y="accuracy",
-#         output="3_accuracy.png",
-#         title="Accuracy accross gpu configurations.",
-#         y_label="accuracy",
-#     )
+for ngpu in set(ngpu_list):
+    create_lineplot(
+        df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).sum(),
+        y="train_time",
+        output="2_time_across_runs.png",
+        title="Training time accross runs",
+        y_label="time",
+        label=ngpu
+    )
+plt.clf()
+for ngpu in set(ngpu_list):
+    create_lineplot(
+        df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).sum(),
+        y="valid_time",
+        output="2_valid_across_runs.png",
+        title="Valid time accross runs",
+        y_label="time",
+        label=ngpu
+    )
 
 plt.clf()
+# plot progression of accuracy across epochs and across GPU configurations.
+for ngpu in set(ngpu_list):
+    create_lineplot(
+        df.query(f"ngpu=={ngpu}").groupby("epochs", as_index=False).mean(),
+        y="accuracy",
+        output="3_accuracy.png",
+        title="Accuracy accross gpu configurations.",
+        y_label="accuracy",
+        label=ngpu
+    )
 
-import sys
-
-sys.exit(0)
-
-sns.lineplot(
-    x="epochs",  # Horizontal axis
-    y="train_time",  # Vertical axis
-    hue="keys",  # Set color
-    data=df,  # Data source
-    estimator=None,
-    lw=1,
-    sort=True,
-    dashes=False,
-)
-
-# Set title
-plt.title("Training times accross epochs.")
-
-# Set x-axis label
-plt.xlabel("epochs")
-
-# Set y-axis label
-plt.ylabel("time")
-
-plt.savefig("train_time.png")
-# It can be plt.show() but it requires tkinter.
-
-
-df["epochs"] = epochs_list
-df["valid_time"] = val_time_list
-df["ngpu"] = ngpu_list
-df["keys"] = keys_list
-
-sns.lineplot(
-    x="epochs",  # Horizontal axis
-    y="valid_time",  # Vertical axis
-    hue="keys",  # Set color
-    data=df,  # Data source
-    estimator=None,
-    lw=1,
-    sort=True,
-    # style="x",
-    #    style="ngpu",
-    #    kind="line",
-    dashes=False,
-)
-
-# Set title
-plt.title("Validation times accross epochs.")
-
-# Set x-axis label
-plt.xlabel("epochs")
-
-# Set y-axis label
-plt.ylabel("time")
-
-plt.savefig("val_time.png")
-# It can be plt.show() but it requires tkinter.
+plt.clf()
