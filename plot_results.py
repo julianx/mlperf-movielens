@@ -70,13 +70,15 @@ df["cpus"] = cpus
 df["cpu_percs"] = cpu_percs
 df["times"] = times
 
-for cpu in set(cpus):
-    create_lineplot(
-        df.query(f"cpus=={cpu}").groupby("times", as_index=False).mean(),
-        y="cpu_percs",
-        output="cpu_graph.png",
-        title="CPU usage",
-        y_label="cpu",
-        label=cpu,
-        x="times",
-    )
+print(len(set(cpus)))
+
+# for cpu in set(cpus):
+#     create_lineplot(
+#         df.query(f"cpus=={cpu}").groupby("times", as_index=False).mean(),
+#         y="cpu_percs",
+#         output="cpu_graph.png",
+#         title="CPU usage",
+#         y_label="cpu",
+#         label=cpu,
+#         x="times",
+#     )
