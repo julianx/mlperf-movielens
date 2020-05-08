@@ -1,9 +1,11 @@
+from pathlib import Path
 import datetime as dt
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 from plot_helpers import create_lineplot
 
+Path("cpu_graphs/").mkdir(exist_ok=True)
 
 times = []
 cpu_percs = []

@@ -1,9 +1,12 @@
+from pathlib import Path
 import datetime as dt
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 from plot_helpers import create_lineplot
 
+
+Path("gpu_graphs/").mkdir(exist_ok=True)
 
 times = []
 gpu_percs = []
@@ -26,7 +29,7 @@ with open("results/gpu.log") as f:
             mem_used,
             mem_free
         ) = line.strip().split(",")
-        print(timestamp)
+
         times.append(dt.datetime.strptime(timestamp, "%Y/%m/%d %H:%M:%S.%f"))
 
         gpus.append(int(index))
