@@ -1,6 +1,7 @@
 import datetime as dt
 import seaborn as sns
 import pandas as pd
+import matplotlib.pyplot as plt
 from plot_helpers import create_lineplot
 
 
@@ -72,13 +73,15 @@ df["times"] = times
 
 print(len(set(cpus)))
 
-# for cpu in set(cpus):
-#     create_lineplot(
-#         df.query(f"cpus=={cpu}").groupby("times", as_index=False).mean(),
-#         y="cpu_percs",
-#         output="cpu_graph.png",
-#         title="CPU usage",
-#         y_label="cpu",
-#         label=cpu,
-#         x="times",
-#     )
+for cpu in set(cpus):
+    create_lineplot(
+        df.query(f"cpus=={cpu}").groupby("times", as_index=False).mean(),
+        y="cpu_percs",
+        output=f"cpu_graphs/cpu_graph_{cpu}.png",
+        title="CPU usage",
+        y_label="cpu",
+        label=cpu,
+        x="times",
+    )
+
+    plt.clf()
