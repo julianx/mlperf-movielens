@@ -7,7 +7,7 @@ from datetime import datetime
 # * write template variables sh file
 # * launch monitoring job for getting parseable results
 # This is better done as a general job in the host.
-# nvidia-smi --format=csv --query-gpu=timestamp,index,utilization.gpu,utilization.memory,pstate,temperature.gpu,memory.used,memory.free -l 5 -f /pylon5/pscstaff/julian/mlperf/results/2020-05-01/general.gpu.log &
+# nvidia-smi --format=csv --query-gpu=timestamp,index,utilization.gpu,utilization.memory,pstate,temperature.gpu,memory.used,memory.free -l 5 -f /pylon5/pscstaff/julian/mlperf/results/2020-05-16-ml/gpu.log &
 # pidstat -C "python|singularity" -h -d -r -u -U julian 5 >> /pylon5/pscstaff/julian/mlperf/results/2020-05-01/julian.cpu.log &
 # * launch sbatch job
 
@@ -29,18 +29,16 @@ for run_cofiguration in run_cofigurations:
                                                 run_cofiguration.get('cpu_cores'), \
                                                 run_cofiguration.get('n_cpu')
 
-    file_name = "job_{nodes}Nodes_{n_gpu}GPUs_{n_cpu}CPUs".format(nodes=nodes, n_gpu=n_gpu, n_cpu=n_cpu)
+    file_name = "mlens_{n_gpu}GPUs".format(nodes=nodes, n_gpu=n_gpu, n_cpu=n_cpu)
     batch_job = """#!/bin/bash
 #SBATCH -N {nodes}
-#SBATCH --partition=GPU-AI
-#SBATCH --gres=gpu:volta32:{n_gpu}
-#SBATCH --cpus-per-task=48
-#SBATCH --ntasks-per-node=1
+#SBATCH --partition=GPU
+#SBATCH --gres=gpu:k80:{n_gpu}
 #SBATCH --constraint=EGRESS
 #SBATCH --reservation=dgx2
 #SBATCH --time={wall_time}
-#SBATCH --exclusive
 
+# LOCAL=/local/movielens
 cd $LOCAL/
 rsync -a $SCRATCH/mlperf/production*.sif .
 rsync -a $SCRATCH/mlperf/training_results_v0.5* .
@@ -62,10 +60,17 @@ DGXNSOCKET='{n_cpu}'
 DGXHT=1         # HT is on is 2, HT off is 1
 DGXIBDEVICES=""' > config_interact.sh
 
+echo '#!/bin/bash
 source /etc/profile.d/modules.sh
 module load singularity
-singularity exec --nv -B $LOCAL/data:/data $LOCAL/production_root_pytorch_18.11-py3.sif ./run_and_time.sh 
-""".format(nodes=nodes, wall_time=wall_time, n_gpu=n_gpu, cpu_cores=cpu_cores, n_cpu=n_cpu, file_name=file_name)
+singularity exec --nv -B $LOCAL/data:/data $LOCAL/production_root_pytorch_18.11-py3.sif ./run_and_time.sh' > movielens_srun.sh
+
+chmod +x movielens_srun.sh
+
+for i in $(seq 1 {runs_per_config}); do srun movielens_srun.sh; done 
+
+""".format(nodes=nodes, wall_time=wall_time, n_gpu=n_gpu, cpu_cores=cpu_cores, n_cpu=n_cpu, file_name=file_name,
+           runs_per_config=runs_per_config)
 
     with open(file_name + ".sbatch.sh", "w") as file:
         file.write(batch_job)
@@ -74,16 +79,16 @@ singularity exec --nv -B $LOCAL/data:/data $LOCAL/production_root_pytorch_18.11-
 
 results_dict = {}
 for run_command in run_commands:
-    for run_number in range(runs_per_config):
-        # process_handle = subprocess.run(run_command.split(" "), capture_output=True)
-        # run_output = process_handle.stdout.decode("utf-8")[:-1].split("\n")
-        print(run_command)
+    # for run_number in range(runs_per_config):
+    # process_handle = subprocess.run(run_command.split(" "), capture_output=True)
+    # run_output = process_handle.stdout.decode("utf-8")[:-1].split("\n")
+    print(run_command)
 
-        # file_name = run_command.split(" ")[1]
-        #
-        # with open(file_name, "w+") as file:
-        #     content = json.dumps(results_dict)
-        #     file.write(content)
+    # file_name = run_command.split(" ")[1]
+    #
+    # with open(file_name, "w+") as file:
+    #     content = json.dumps(results_dict)
+    #     file.write(content)
 
-print('pidstat -C "python|singularity" -h -d -r -u -U julian 5 >> '
-      '/pylon5/pscstaff/julian/mlperf/results/2020-05-01/julian.cpu.log &')
+print('pidstat -C "python|singularity" -h -d -r -u -U julian 5 >> cpu.log &')
+print('nvidia-smi --format=csv --query-gpu=timestamp,index,utilization.gpu,utilization.memory,memory.used,memory.free -l 5 -f gpu.log &')
